@@ -77,7 +77,8 @@ const GODZINY = [
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.MessageContent
   ]
 });
 
@@ -111,6 +112,31 @@ client.once('ready', () => {
       );
     });
   });
+});
+client.on('messageCreate', async message => {
+  if (message.author.bot) return;
+  if (message.content !== '!donos') return;
+
+  const members = await message.guild.members.fetch();
+
+  const humans = members.filter(m =>
+    !m.user.bot && m.roles.cache.has(ROLE_ID)
+  );
+
+  if (humans.size === 0) {
+    return message.reply("🚨 Brak obywateli objętych obserwacją.");
+  }
+
+  const randomMember = humans.random();
+  const randomCzyn = CZYNY[Math.floor(Math.random() * CZYNY.length)];
+  const tekst = randomCzyn.replace("{user}", `${randomMember}`);
+
+  const donosChannel = await client.channels.fetch(process.env.DONOS_CHANNEL_ID);
+
+donosChannel.send(
+
+    `🚨 **DONOS RĘCZNY**\n\n${tekst}\n\n🚨`
+  );
 });
 
 client.login(process.env.TOKEN);
